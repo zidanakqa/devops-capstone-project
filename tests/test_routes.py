@@ -13,7 +13,7 @@ from service.common import status  # HTTP Status Codes
 from service.models import db, Account, init_db
 from service.routes import app
 from service import talisman
-from flask_cors import CORS
+# from flask_cors import CORS
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
@@ -36,8 +36,7 @@ class TestAccountService(TestCase):
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
         init_db(app)
-        talisman.force_https = False  
-
+        talisman.force_https = False
 
     @classmethod
     def tearDownClass(cls):
@@ -196,11 +195,9 @@ class TestAccountService(TestCase):
         resp = self.client.delete(BASE_URL)  # 8 spaces
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)  # 8 spaces
 
-        
-
     def test_cors_security(self):
         """It should return a CORS header"""
-        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
+        response = self.client.get('/', environ_overrides=self.HTTPS_ENVIRON)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check for the CORS header
-        self.assertEqual(response.headers.get('Access-Control-Allow-Origin'), '*')    
+        self.assertEqual(response.headers.get('Access-Control-Allow-Origin'), '*')
