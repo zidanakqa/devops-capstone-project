@@ -2,6 +2,58 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
+  name: cleanup
+spec:
+  description: This task cleans up the workspace
+  workspaces:
+    - name: source
+  steps:
+    - name: remove
+      image: alpine:3
+      workingDir: $(workspaces.source.path)
+      command:
+        - /bin/sh
+      args:
+        - -c
+        - rm -rf *
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: flake8
+spec:
+  description: This task will run flake8 linting on the provided input.
+  workspaces:
+    - name: source
+  params:
+    - name: image
+      description: The Python image to use
+      type: string
+      default: python:3.9-slim
+    - name: args
+      description: Arguments to pass to flake8
+      type: string
+      default: ""
+  steps:
+    - name: flake8
+      image: $(params.image)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -e
+
+        echo "***** Installing flake8 *****"
+        python -m pip install --upgrade pip
+        pip install flake8
+
+        echo "***** Running flake8 *****"
+        flake8 $(params.args)
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
   name: nose
 spec:
   description: This task will run nosetests on the provided input.
@@ -11,11 +63,11 @@ spec:
     - name: args
       description: Arguments to pass to nose
       type: string
-      default: "-v"
+      default: -v
     - name: database_uri
       description: Database connection string
       type: string
-      default: "sqlite:///test.db"
+      default: sqlite:///test.db
   steps:
     - name: nosetests
       image: python:3.9-slim
